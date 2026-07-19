@@ -3,21 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لعبة الضامة</title>
+    <title>الضامة المغربية - لعبة مجانية أونلاين</title>
+
+<meta name="description" content="العب الضامة المغربية مجانًا ضد الذكاء الاصطناعي أو مع صديق مباشرة من المتصفح.">
+
+<meta name="keywords" content="الضامة المغربية, لعبة الضامة, dama, checkers, Moroccan dama">
+
+<meta name="author" content="Yassine Daoudi">
+
+<meta name="robots" content="index, follow">
+
+<meta property="og:title" content="الضامة المغربية">
+<meta property="og:description" content="لعبة الضامة المغربية مجانًا على الإنترنت">
+<meta property="og:type" content="website">
     <link rel="stylesheet" href="tp1.css">
-</head>
-<body>
+</head><body>
+    <div class="container">
+        <h1>🎮 الضامة المغربية</h1>
 
-    <h1>لعبة الضامة</h1>
+        <div class="top-bar">
+            <div class="score red">
+                🔴 الأحمر
+                <span id="redCount">12</span>
+            </div>
 
-    <div id="board"></div>
-  <button id="restart">إعادة اللعب</button>
-<p>🔴 الأحمر: <span id="redCount">12</span></p>
-<p>🔵 الأزرق: <span id="blueCount">12</span></p>
-<div id="menu">
-    <button id="pvp">👥 لاعب ضد لاعب</button>
-    <button id="ai">🤖 لاعب ضد روبوت</button>
+            <div class="turn" id="turn">
+                دور الأحمر
+            </div>
+
+            <div class="score blue">
+                🔵 الأزرق
+                <span id="blueCount">12</span>
+            </div>
+        </div>
+
+        <div id="board"></div>
+
+        <div class="buttons">
+            <div id="winnerModal" class="modal">
+    <div class="modal-box">
+        <h2 id="winnerText"></h2>
+        <button onclick="location.reload()">🔄 العب من جديد</button>
+    </div>
 </div>
+</div>
+</div>
+            <button id="pvp" class="mode-btn pvp">👥 PVP</button>
+            <button id="ai" class="mode-btn ai">🤖 IA</button>
+        
+
     <script src="colle.js"></script>
 </body>
 </html>

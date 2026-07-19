@@ -46,24 +46,74 @@ function createPiece(color) {
     piece.dataset.color = color;
 
     return piece;
-}
-function canCapture(piece) {
+}function canCapture(piece) {
 
     const color = piece.dataset.color;
 
     const row = Number(piece.parentElement.dataset.row);
     const col = Number(piece.parentElement.dataset.col);
 
+    // إذا كانت القطعة ملكاً
+    if (piece.dataset.king === "true") {
+
+        const dirs = [
+            [1,1],
+            [1,-1],
+            [-1,1],
+            [-1,-1]
+        ];
+
+        for (const [dr, dc] of dirs) {
+
+            let r = row + dr;
+            let c = col + dc;
+
+            let enemyFound = false;
+
+            while (true) {
+
+                const square = getSquare(r, c);
+
+                if (!square) break;
+
+                if (square.children.length === 0) {
+
+                    if (enemyFound) {
+                        return true;
+                    }
+
+                } else {
+
+                    const p = square.firstElementChild;
+
+                    if (p.dataset.color === color) {
+                        break;
+                    }
+
+                    if (enemyFound) {
+                        break;
+                    }
+
+                    enemyFound = true;
+                }
+
+                r += dr;
+                c += dc;
+            }
+        }
+
+        return false;
+    }
+
+    // القطعة العادية
     const directions = color === "red"
-        ? [[2, -2], [2, 2]]
-        : [[-2, -2], [-2, 2]];
+        ? [[2,-2],[2,2]]
+        : [[-2,-2],[-2,2]];
 
     for (const [dr, dc] of directions) {
 
         const target = getSquare(row + dr, col + dc);
-
-        const middle = getSquare(row + dr / 2, col + dc / 2);
-
+        const middle = getSquare(row + dr/2, col + dc/2);
 
         if (
             target &&
@@ -132,40 +182,82 @@ board.addEventListener("click", function (e) {
 
         selectedPiece = target;
         selectedPiece.style.outline = "4px solid yellow";
-        
+        selectedPiece.style.transform = "scale(1.15)";        
 clearMoves();
 
 const row = Number(selectedPiece.parentElement.dataset.row);
 const col = Number(selectedPiece.parentElement.dataset.col);
+if (selectedPiece.dataset.king === "true") {
 
-const dirs = selectedPiece.dataset.king === "true"
-    ? [[1,1],[1,-1],[-1,1],[-1,-1]]
-    : currentPlayer === "red"
+    const dirs = [[1,1],[1,-1],[-1,1],[-1,-1]];
+
+    dirs.forEach(([dr, dc]) => {
+
+        let r = row + dr;
+        let c = col + dc;
+        let enemyFound = false;
+
+        while (true) {
+
+            const square = getSquare(r, c);
+
+            if (!square) break;
+
+            if (square.children.length === 0) {
+
+                square.classList.add(enemyFound ? "capture" : "move");
+
+            } else {
+
+                const piece = square.firstElementChild;
+
+                if (piece.dataset.color === currentPlayer) {
+                    break;
+                }
+
+                if (enemyFound) {
+                    break;
+                }
+
+                enemyFound = true;
+            }
+
+            r += dr;
+            c += dc;
+        }
+
+    });
+
+} else {
+
+    const dirs = currentPlayer === "red"
         ? [[1,1],[1,-1]]
         : [[-1,1],[-1,-1]];
-dirs.forEach(([dr, dc]) => {
 
-    // حركة عادية
-    let square = getSquare(row + dr, col + dc);
+    dirs.forEach(([dr, dc]) => {
 
-    if (square && square.children.length === 0) {
-        square.classList.add("move");
-    }
+        let square = getSquare(row + dr, col + dc);
 
-    // حركة الأكل
-    let target = getSquare(row + dr * 2, col + dc * 2);
-    let middle = getSquare(row + dr, col + dc);
+        if (square && square.children.length === 0) {
+            square.classList.add("move");
+        }
 
-    if (
-        target &&
-        middle &&
-        target.children.length === 0 &&
-        middle.children.length > 0 &&
-        middle.firstElementChild.dataset.color !== currentPlayer
-    ) {
-        target.classList.add("capture");
-    }
-});
+        let target = getSquare(row + dr * 2, col + dc * 2);
+        let middle = getSquare(row + dr, col + dc);
+
+        if (
+            target &&
+            middle &&
+            target.children.length === 0 &&
+            middle.children.length > 0 &&
+            middle.firstElementChild.dataset.color !== currentPlayer
+        ) {
+            target.classList.add("capture");
+        }
+
+    });
+
+}
 
         return;
     }
@@ -188,37 +280,48 @@ dirs.forEach(([dr, dc]) => {
 
         let valid = false;
         let capturedPiece = null;const isKing = selectedPiece.dataset.king === "true";
-
 if (isKing) {
 
-    // حركة عادية
-    if (
-        Math.abs(toRow - fromRow) === 1 &&
-        Math.abs(toCol - fromCol) === 1
-    ) {
+    if (Math.abs(toRow - fromRow) === Math.abs(toCol - fromCol)) {
+
+        let dr = toRow > fromRow ? 1 : -1;
+        let dc = toCol > fromCol ? 1 : -1;
+
+        let r = fromRow + dr;
+        let c = fromCol + dc;
+
         valid = true;
-    }
+        let enemy = null;
 
-    // الأكل
-    if (
-        Math.abs(toRow - fromRow) === 2 &&
-        Math.abs(toCol - fromCol) === 2
-    ) {
+        while (r !== toRow && c !== toCol) {
 
-        const middle = getSquare(
-            (fromRow + toRow) / 2,
-            (fromCol + toCol) / 2
-        );
+            const square = getSquare(r, c);
 
+            if (square.children.length > 0) {
 
-        if (
-            middle &&
-            middle.firstElementChild &&
-            middle.firstElementChild.dataset.color !== currentPlayer
-        ) {
-            valid = true;
-            capturedPiece = middle.firstElementChild;
+                const piece = square.firstElementChild;
+
+                if (piece.dataset.color === currentPlayer) {
+                    valid = false;
+                    break;
+                }
+
+                if (enemy) {
+                    valid = false;
+                    break;
+                }
+
+                enemy = piece;
+            }
+
+            r += dr;
+            c += dc;
         }
+
+        if (valid && enemy) {
+            capturedPiece = enemy;
+        }
+
     }
 
 } else if (currentPlayer === "red") {
@@ -323,11 +426,12 @@ if (
         selectedPiece.style.outline = "4px solid yellow";
 
     } else {
-
         selectedPiece.style.outline = "none";
+        selectedPiece.style.transform = "scale(1)";
         selectedPiece = null;
 
         currentPlayer = currentPlayer === "red" ? "blue" : "red";
+        updateTurn();
        if (
     gameMode === "ai" &&
     currentPlayer === "blue" &&
@@ -337,7 +441,7 @@ if (
 }
         if (!hasMove(currentPlayer)) {
             winSound.play();
-    alert(
+    showWinner(
         currentPlayer === "red"
             ? "🎉 اللاعب الأزرق فاز!"
             : "🎉 اللاعب الأحمر فاز!"
@@ -354,13 +458,13 @@ function checkWinner() {
 
     if (redPieces === 0) {
         winSound.play();
-        alert("وليد حمار");
+        showWinner("🎉 اللاعب الأزرق فاز!");
         return true;
     }
 
     if (bluePieces === 0) {
         winSound.play();
-        alert("ياسين حمار");
+        showWinner("🎉 اللاعب الأحمر فاز!");
         return true;
     }
 
@@ -407,7 +511,7 @@ function aiMove() {
     const moves = getAllMoves("blue");
 
     if (moves.length === 0) {
-        alert("🎉 فاز الأحمر");
+        showWinner("🎉 فاز الأحمر");
         return;
     }
 
@@ -482,12 +586,52 @@ function getMoves(board, color) {
 
             if (piece.king) {
 
-                dirs = [
-                    [1,1],[1,-1],
-                    [-1,1],[-1,-1]
-                ];
+    const dirs = [
+        [1,1],[1,-1],
+        [-1,1],[-1,-1]
+    ];
+
+    for (const [dr, dc] of dirs) {
+
+        let r = row + dr;
+        let c = col + dc;
+        let enemyFound = false;
+        let capRow = -1;
+        let capCol = -1;
+
+        while (inside(r, c)) {
+
+            if (board[r][c] === null) {
+
+                moves.push({
+                    fromRow: row,
+                    fromCol: col,
+                    toRow: r,
+                    toCol: c,
+                    capture: enemyFound,
+                    capRow,
+                    capCol
+                });
 
             } else {
+
+                if (board[r][c].color === color) break;
+
+                if (enemyFound) break;
+
+                enemyFound = true;
+                capRow = r;
+                capCol = c;
+            }
+
+            r += dr;
+            c += dc;
+        }
+    }
+
+    continue;
+
+} else {
 
                 dirs = color === "blue"
                     ? [[-1,-1],[-1,1]]
@@ -709,7 +853,7 @@ function aiMove() {
     );
 
     if (!result.move) {
-        alert("🎉 فاز الأحمر");
+        showWinner("🎉 فاز الأحمر");
         return;
     }
 
@@ -725,5 +869,64 @@ function aiMove() {
 
     selectedPiece = from.firstElementChild;
 
-    to.click();
+   to.click();
+
+setTimeout(() => {
+
+    while (
+        selectedPiece &&
+        selectedPiece.dataset.color === "blue" &&
+        canCapture(selectedPiece)
+    ) {
+
+        const boardState = getBoardState();
+
+        const result = minimax(
+            boardState,
+            4,
+            -Infinity,
+            Infinity,
+            true
+        );
+
+        if (!result.move) break;
+
+        const from = getSquare(
+            result.move.fromRow,
+            result.move.fromCol
+        );
+
+        const to = getSquare(
+            result.move.toRow,
+            result.move.toCol
+        );
+
+        if (
+            from.firstElementChild !== selectedPiece
+        ) {
+            break;
+        }
+
+        to.click();
+
+    }
+
+}, 300);
+}
+function updateTurn() {
+
+    const turn = document.getElementById("turn");
+
+    if (currentPlayer === "red") {
+        turn.textContent = "🔴 دور الأحمر";
+    } else {
+        turn.textContent = "🔵 دور الأزرق";
+    }
+
+}
+function showWinner(text){
+
+    document.getElementById("winnerText").textContent = text;
+
+    document.getElementById("winnerModal").style.display="flex";
 }
