@@ -1,0 +1,1 @@
+let order=parseInt(prompt("enter le order de poly :"));
